@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- JAN中継サーバーを Mac の起動時に動かし、止まっても自動で立ち上げ直す。
+     入れ方: cp relay/com.okaidoku.janrelay.plist ~/Library/LaunchAgents/ && launchctl load ~/Library/LaunchAgents/com.okaidoku.janrelay.plist
+     公開:   tailscale funnel --bg --set-path /jan http://127.0.0.1:3100 -->
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.okaidoku.janrelay</string>
+  <key>ProgramArguments</key><array><string>/usr/local/bin/node</string><string>/Users/hiroshi/okaidoku_pack_jan/relay/server.js</string></array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>10</integer>
+  <key>StandardOutPath</key><string>/dev/null</string>
+  <key>StandardErrorPath</key><string>/Users/hiroshi/Library/Logs/janrelay.log</string>
+</dict></plist>

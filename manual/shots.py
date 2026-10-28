@@ -28,3 +28,36 @@ mm = 300 / 25.4
 subprocess.run(["pdftoppm", "-r", "300", "-png", "-singlefile", "-f", "1", "-l", "1", "-x", str(int(4 * mm)), "-y", str(int(184 * mm)),
                 "-W", str(int(102 * mm)), "-H", str(int(57 * mm)), pdf, os.path.join(HERE, "shots", "card")], check=True)
 print("shot card")
+
+# ===== スマホ連携の画面（テスト用に中継サーバーを一時的に動かす） =====
+import json, time, urllib.request, shutil
+TEST = "http://127.0.0.1:3199/jan"
+relay = subprocess.Popen(["node", os.path.join(HERE, "..", "relay", "server.js")], env={**os.environ, "PORT": "3199"}, stdout=subprocess.DEVNULL)
+try:
+    time.sleep(1)
+    room = json.load(urllib.request.urlopen(urllib.request.Request(TEST + "/rooms", method="POST")))
+    urllib.request.urlopen(f"{TEST}/rooms/{room['code']}/events?key={room['key']}&set=No.2&count=3").read()
+    scan = open(os.path.join(HERE, "..", "scan.html"), encoding="utf-8").read().replace("https://hiroshinomac-mini.tail387218.ts.net/jan", TEST)
+    phone = {   # 名前: (scan.html の差し替え, 高さ)
+        "phone_ok": (scan.replace("<script>\nconst RELAY", '<script>localStorage.setItem("jan_relay_code","%s")</script>\n<script>\nconst RELAY' % room["code"])
+                         .replace("</body>", '<script>setTimeout(()=>{$("manual").value="4901234500099";$("manualBtn").click();},700);'
+                                             'setTimeout(()=>{$("manual").value="4901234500105";$("manualBtn").click();},1200);</script></body>'), 960),
+        "phone_ng": (scan.replace("127.0.0.1:3199", "127.0.0.1:3198"), 520),
+    }
+    for name, (html, h) in phone.items():
+        page = os.path.join(tmp, name + ".html")   # headless の画面幅は最小500pxなので、500px幅のスマホとして撮る
+        open(page, "w", encoding="utf-8").write(html)
+        out = os.path.join(HERE, "shots", name + ".png")
+        subprocess.run([CH, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--user-data-dir=" + os.path.join(tmp, "p_" + name),
+                        "--virtual-time-budget=6000", "--force-device-scale-factor=2", f"--window-size=500,{h}", "--screenshot=" + out, "file://" + page], check=True, capture_output=True)
+        print("shot", name)
+finally:
+    relay.terminate()
+
+# PC のスマホ連携欄（番号が出ている状態）
+page = os.path.join(tmp, "link.html")
+open(page, "w", encoding="utf-8").write(src.replace("</body>", '<script>sets = sampleSets(); cur = 1; save(); refresh(true); '
+    'link = { code: "305991", key: "x", after: 0, map: {} }; linkState = "ok"; lastPhone = "4901234500099 → No.2"; drawPhone();</script></body>'.replace("305991", room["code"])))
+subprocess.run([CH, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--user-data-dir=" + os.path.join(tmp, "p_link"), "--virtual-time-budget=6000",
+                "--force-device-scale-factor=2", "--window-size=1280,1100", "--screenshot=" + os.path.join(HERE, "shots", "link.png"), "file://" + page], check=True, capture_output=True)
+print("shot link")

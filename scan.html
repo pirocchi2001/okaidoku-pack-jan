@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JANスマホ読み取り（レジ指示カード）</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --navy: #173a5c; --ink: #14212e; --sub: #5a6b7b; --line: #d3dde7; --bg: #eaf0f6; --field: #f4f7fa; --red: #d50000; --sel: #f2c230; --ok: #2e7d32; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Noto Sans JP", "Hiragino Sans", sans-serif; font-size: 16px; color: var(--ink); background: var(--bg); -webkit-text-size-adjust: 100%; }
+  header { position: relative; background: #fff; padding: 10px 16px 14px; box-shadow: 0 2px 12px rgba(20,33,46,.1); }
+  header::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px;
+    background: linear-gradient(90deg, #dc4c54 0 20%, #f4d44c 20% 40%, #54b4bc 40% 60%, #6cac4c 60% 80%, #4cacdc 80% 100%); }
+  header h1 { font-size: 17px; margin: 0; }
+  header .sub { font-size: 12px; color: var(--sub); }
+  main { padding: 12px 12px 40px; max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px; box-shadow: 0 1px 2px rgba(20,33,46,.06); }
+  .card h2 { font-size: 15px; margin: 0 0 8px; }
+  button { font: inherit; font-size: 16px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--ink); }
+  button.primary { background: var(--navy); border-color: var(--navy); color: #fff; font-weight: 700; }
+  button:disabled { opacity: .45; }
+  input { font: inherit; font-size: 26px; letter-spacing: 6px; text-align: center; width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--field); }
+  .row { display: flex; gap: 8px; }
+  .row > * { flex: 1; }
+  .hint { font-size: 13px; color: var(--sub); margin: 6px 0 0; line-height: 1.6; }
+
+  /* 接続状態 */
+  .status { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; font-size: 14px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; background: #aab5c0; }
+  .dot.ok { background: var(--ok); } .dot.ng { background: var(--red); } .dot.wait { background: #e6a100; }
+  .ngbox { display: none; background: var(--red); color: #fff; border-radius: 12px; padding: 14px; text-align: center; font-weight: 700; }
+  .ngbox big { display: block; font-size: 26px; letter-spacing: 2px; }
+  .ngbox small { display: block; font-weight: 400; font-size: 13px; margin-top: 4px; line-height: 1.6; }
+  body.ng .ngbox { display: block; }
+
+  /* カメラ */
+  .cam { position: relative; background: #000; border-radius: 12px; overflow: hidden; aspect-ratio: 4 / 3; }
+  .cam video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cam .guide { position: absolute; left: 50%; top: 50%; width: 78%; height: 34%; transform: translate(-50%, -50%); border: 3px solid var(--sel); border-radius: 10px; box-shadow: 0 0 0 999px rgba(0,0,0,.35); pointer-events: none; }
+  .cam .guide::after { content: ""; position: absolute; left: 6%; right: 6%; top: 50%; height: 2px; background: #ff5252; opacity: .8; }
+  .cam .msg { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; color: #fff; font-size: 14px; text-shadow: 0 1px 3px #000; }
+  .cam .start { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .cam .torch { position: absolute; right: 8px; top: 8px; padding: 6px 10px; font-size: 14px; display: none; }
+  body.ng .cam::after { content: "転送不可"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(213,0,0,.75); color: #fff; font-size: 30px; font-weight: 700; }
+
+  .toast { position: fixed; left: 50%; top: 14px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 15px; font-weight: 700; opacity: 0; transition: opacity .2s; z-index: 10; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; } .toast.ok { background: var(--ok); } .toast.warn { background: var(--red); }
+
+  .list { display: flex; flex-direction: column; gap: 6px; }
+  .item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 15px; }
+  .item .jan { font-family: Consolas, monospace; letter-spacing: 1px; flex: 1; }
+  .item .st { font-size: 12px; color: var(--ok); white-space: nowrap; }
+  .item.undone { opacity: .45; text-decoration: line-through; }
+  .item button { padding: 4px 10px; font-size: 13px; }
+  .empty { color: var(--sub); font-size: 14px; text-align: center; padding: 8px; }
+  .code { font-size: 22px; font-weight: 700; letter-spacing: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>JANをスマホで読み取る</h1>
+  <div class="sub">処分品セット レジ指示カード ／ 読んだJANはMac経由でPCに送られます</div>
+</header>
+
+<main>
+  <div class="ngbox" id="ngbox"><big>転送不可</big>Macにつながりません<small>Macの電源・インターネットを確認してください。<br>つながると自動で元に戻ります。</small></div>
+
+  <!-- 番号を入れる -->
+  <section class="card" id="joinCard">
+    <h2>① PCに出ている6桁の番号を入れる</h2>
+    <input id="code" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="off">
+    <div class="row" style="margin-top:10px"><button class="primary" id="joinBtn">つなぐ</button></div>
+    <p class="hint">PCの「レジ指示カード」で、編集欄の「スマホで読み取る」を押すと番号が出ます。</p>
+    <p class="hint" id="joinMsg" style="color:var(--red)"></p>
+  </section>
+
+  <!-- つながっている -->
+  <section class="card" id="linkCard" hidden>
+    <div class="status">
+      <span class="dot" id="macDot"></span><span id="macTxt">Mac：確認中…</span>
+      <span class="dot" id="pcDot"></span><span id="pcTxt">PC：確認中…</span>
+    </div>
+    <div class="row" style="margin-top:10px;align-items:center">
+      <span>番号 <span class="code" id="codeShow"></span></span>
+      <button id="leaveBtn" style="flex:none">番号を変える</button>
+    </div>
+  </section>
+
+  <section class="card" id="camCard" hidden>
+    <h2>② バーコードを黄色い枠に合わせる</h2>
+    <div class="cam">
+      <video id="video" playsinline muted></video>
+      <div class="guide"></div>
+      <div class="msg" id="camMsg"></div>
+      <div class="start" id="startBox"><button class="primary" id="startBtn">カメラを起動</button></div>
+      <button class="torch" id="torchBtn">ライト</button>
+    </div>
+    <p class="hint">読めると「ピッ」と鳴り、PCの編集中のセットにJANが入ります。同じ商品を2つ入れるときは、一度カメラから外してからもう一度読みます。</p>
+    <details style="margin-top:8px"><summary style="font-size:14px">数字を手で入力する</summary>
+      <div class="row" style="margin-top:8px"><input id="manual" inputmode="numeric" maxlength="13" placeholder="13けた" style="font-size:18px;letter-spacing:2px"><button id="manualBtn" style="flex:none">送る</button></div>
+    </details>
+  </section>
+
+  <section class="card" id="listCard" hidden>
+    <h2>送ったJAN（<span id="sentCount">0</span>件）</h2>
+    <div class="list" id="list"><div class="empty">まだありません</div></div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+<div id="h5-hidden" hidden></div>
+
+<script>
+const RELAY = "https://hiroshinomac-mini.tail387218.ts.net/jan";
+const COOLDOWN_MS = 1500;          // 同じJANは、いったん枠から外れてこの時間たってから再び数える（売場スキャンと同じ）
+const HEALTH_MS = 3000;
+const $ = id => document.getElementById(id);
+
+let code = "", macOk = null, sent = [];     // sent: [{n, jan, undone}]
+
+function checkDigit(body) {
+  let s = 0;
+  for (let i = 0; i < body.length; i++) { const d = +body[body.length - 1 - i]; s += i % 2 === 0 ? d * 3 : d; }
+  return (10 - s % 10) % 10;
+}
+const validJan = j => /^\d{13}$/.test(j) && checkDigit(j.slice(0, 12)) === +j[12];
+
+let toastTimer = 0;
+function toast(t, kind = "") {
+  const el = $("toast"); el.textContent = t; el.className = "toast show " + kind;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.className = "toast " + kind, 1600);
+}
+let actx;
+function beep(ok = true) {
+  try {
+    actx ??= new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.frequency.value = ok ? 1800 : 300; g.gain.value = 0.15; o.connect(g); g.connect(actx.destination);
+    o.start(); o.stop(actx.currentTime + (ok ? 0.08 : 0.3));
+  } catch {}
+  navigator.vibrate?.(ok ? 60 : [80, 60, 80]);
+}
+
+async function api(path, opt = {}) {
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 5000);
+  try {
+    const r = await fetch(RELAY + path, { ...opt, signal: ctl.signal, cache: "no-store",
+      headers: opt.body ? { "Content-Type": "application/json" } : undefined });
+    const j = await r.json().catch(() => ({}));
+    return { status: r.status, ...j };
+  } finally { clearTimeout(t); }
+}
+
+// ===== Mac・PC の接続状態 =====
+function setMac(ok) {
+  macOk = ok;
+  document.body.classList.toggle("ng", !ok);
+  $("macDot").className = "dot " + (ok ? "ok" : "ng");
+  $("macTxt").textContent = ok ? "Mac：接続中（転送できます）" : "Mac：転送不可（つながりません）";
+}
+function setPc(st) {
+  if (!st || !macOk) { $("pcDot").className = "dot"; $("pcTxt").textContent = "PC：—"; return; }
+  if (st.pc) { $("pcDot").className = "dot ok"; $("pcTxt").textContent = `PC：${st.pcInfo?.set || "編集中のセット"} に追加中（いま${st.pcInfo?.count ?? 0}個）`; }
+  else { $("pcDot").className = "dot wait"; $("pcTxt").textContent = "PC：待っていません（PCの画面を確認）"; }
+}
+async function check() {
+  try {
+    if (!code) { const r = await api("/health"); setMac(r.status === 200); return; }
+    const r = await api("/rooms/" + code);
+    if (r.status === 404) { setMac(true); leave("この番号は使えなくなりました。PCで「スマホで読み取る」を押し直して、新しい番号を入れてください。"); return; }
+    setMac(r.status === 200); setPc(r.status === 200 ? r : null);
+  } catch { setMac(false); setPc(null); }
+}
+setInterval(check, HEALTH_MS);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) check(); });
+
+// ===== 番号でつなぐ =====
+async function join(c) {
+  $("joinMsg").textContent = "";
+  if (!/^\d{6}$/.test(c)) { $("joinMsg").textContent = "6けたの数字を入れてください。"; return; }
+  try {
+    const r = await api("/rooms/" + c);
+    setMac(true);
+    if (r.status !== 200) { $("joinMsg").textContent = "番号が違うか、PCで連携が終わっています。PCの番号を確かめてください。"; return; }
+    code = c; localStorage.setItem("jan_relay_code", c);
+    $("codeShow").textContent = c.slice(0, 3) + " " + c.slice(3);
+    $("joinCard").hidden = true; $("linkCard").hidden = $("camCard").hidden = $("listCard").hidden = false;
+    setPc(r);
+  } catch { setMac(false); $("joinMsg").textContent = "転送不可：Macにつながりません。"; }
+}
+function leave(msg) {
+  code = ""; localStorage.removeItem("jan_relay_code"); stopCamera();
+  $("joinCard").hidden = false; $("linkCard").hidden = $("camCard").hidden = $("listCard").hidden = true;
+  $("code").value = ""; $("joinMsg").textContent = msg || "";
+}
+$("joinBtn").onclick = () => join(toHalf($("code").value.trim()));
+$("code").addEventListener("input", e => { e.target.value = toHalf(e.target.value).replace(/\D/g, ""); if (e.target.value.length === 6) join(e.target.value); });
+$("leaveBtn").onclick = () => leave();
+function toHalf(s) { return String(s).replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)); }
+
+// ===== 送る・取り消す =====
+async function sendJan(jan) {
+  if (!macOk) { beep(false); toast("転送不可：Macにつながりません", "warn"); return false; }
+  try {
+    const r = await api(`/rooms/${code}/events`, { method: "POST", body: JSON.stringify({ jan }) });
+    if (r.status === 404) { leave("この番号は使えなくなりました。PCで新しい番号を出してください。"); return false; }
+    if (r.status !== 200) { beep(false); toast("送れませんでした", "warn"); return false; }
+    sent.unshift({ n: r.n, jan, undone: false }); drawList(); setPc(r);
+    beep(true); toast(jan + " を送りました", "ok");
+    return true;
+  } catch { setMac(false); beep(false); toast("転送不可：Macにつながりません", "warn"); return false; }
+}
+async function undo(n) {
+  const it = sent.find(s => s.n === n); if (!it || it.undone) return;
+  try {
+    const r = await api(`/rooms/${code}/events`, { method: "POST", body: JSON.stringify({ undo: n }) });
+    if (r.status === 200) { it.undone = true; drawList(); toast("取り消しました"); }
+    else toast("取り消せませんでした", "warn");
+  } catch { setMac(false); toast("転送不可：Macにつながりません", "warn"); }
+}
+function drawList() {
+  const live = sent.filter(s => !s.undone).length;
+  $("sentCount").textContent = live;
+  $("list").innerHTML = sent.length ? sent.slice(0, 40).map(s =>
+    `<div class="item${s.undone ? " undone" : ""}"><span class="jan">${s.jan}</span><span class="st">${s.undone ? "取消済み" : "✓ 送信済み"}</span>${s.undone ? "" : `<button onclick="undo(${s.n})">取消</button>`}</div>`).join("")
+    : `<div class="empty">まだありません</div>`;
+}
+$("manualBtn").onclick = async () => {
+  let v = toHalf($("manual").value).replace(/\D/g, "");
+  if (v.length === 12) v += checkDigit(v);
+  if (!validJan(v)) { beep(false); toast("13けたのJANを入れてください", "warn"); return; }
+  if (await sendJan(v)) $("manual").value = "";
+};
+
+// ===== カメラ（売場スキャンと同じ：BarcodeDetector、なければ html5-qrcode） =====
+const video = $("video");
+let stream = null, track = null, looping = false, detector = null, h5 = null;
+const lastSeen = new Map();
+if ("BarcodeDetector" in window) { try { detector = new BarcodeDetector({ formats: ["ean_13"] }); } catch {} }
+
+function loadH5() {
+  return new Promise((ok, ng) => {
+    if (window.Html5Qrcode) return ok();
+    const s = document.createElement("script");
+    s.src = "https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"; s.onload = ok; s.onerror = ng;
+    document.head.appendChild(s);
+  });
+}
+async function startCamera() {
+  try {
+    if (!detector) await loadH5();
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
+    video.srcObject = stream; await video.play();
+    track = stream.getVideoTracks()[0];
+    const caps = track.getCapabilities?.() ?? {};
+    try { if (caps.focusMode?.includes("continuous")) await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] }); } catch {}
+    $("torchBtn").style.display = caps.torch ? "block" : "none";
+    $("startBox").style.display = "none";
+    $("camMsg").textContent = "バーコードを枠に合わせてください";
+    looping = true; loop();
+  } catch (e) {
+    $("camMsg").textContent = "カメラを使えません（" + e.name + "）。設定でカメラを許可してください。";
+  }
+}
+function stopCamera() {
+  looping = false; stream?.getTracks().forEach(t => t.stop()); stream = track = null;
+  $("startBox").style.display = ""; $("torchBtn").style.display = "none";
+}
+$("startBtn").onclick = () => {   // iPhone はボタンを押したときに音を使えるようにしておく
+  try { actx ??= new (window.AudioContext || window.webkitAudioContext)(); actx.resume?.(); } catch {}
+  startCamera();
+};
+let torchOn = false;
+$("torchBtn").onclick = async () => { try { torchOn = !torchOn; await track.applyConstraints({ advanced: [{ torch: torchOn }] }); } catch { torchOn = false; } };
+
+const work = document.createElement("canvas");
+function guideCanvas() {   // 黄色い枠のあたり（少し広め）だけを切り出す
+  const vw = video.videoWidth, vh = video.videoHeight, cw = video.clientWidth, ch = video.clientHeight;
+  const s = Math.max(cw / vw, ch / vh), offX = (vw * s - cw) / 2, offY = (vh * s - ch) / 2;
+  const gw = cw * 0.9, gh = ch * 0.5;
+  const x = ((cw - gw) / 2 + offX) / s, y = ((ch - gh) / 2 + offY) / s;
+  work.width = Math.round(gw / s); work.height = Math.round(gh / s);
+  work.getContext("2d").drawImage(video, x, y, gw / s, gh / s, 0, 0, work.width, work.height);
+  return work;
+}
+async function detect() {
+  if (detector) return (await detector.detect(video)).map(r => r.rawValue);
+  h5 ??= new Html5Qrcode("h5-hidden", { verbose: false, formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13] });
+  const blob = await new Promise(r => guideCanvas().toBlob(r, "image/jpeg", 0.9));
+  try { return [await h5.scanFile(new File([blob], "f.jpg", { type: "image/jpeg" }), false)]; } catch { return []; }
+}
+async function loop() {
+  while (looping) {
+    if (video.readyState >= 2 && code) {
+      let found = [];
+      try { found = await detect(); } catch {}
+      const now = Date.now();
+      for (const raw of found) {
+        const jan = String(raw).replace(/\D/g, "");
+        if (!validJan(jan)) continue;
+        const prev = lastSeen.get(jan) ?? 0; lastSeen.set(jan, now);
+        if (now - prev < COOLDOWN_MS) continue;          // 映り続けている間は1回だけ
+        if (!macOk) { beep(false); toast("転送不可：Macにつながりません", "warn"); continue; }
+        await sendJan(jan);
+      }
+    }
+    await new Promise(r => setTimeout(r, detector ? 120 : 250));
+  }
+}
+
+// ===== はじめに =====
+check();
+const saved = localStorage.getItem("jan_relay_code");
+if (saved) join(saved);
+</script>
+</body>
+</html>
