@@ -13,7 +13,8 @@ const MAX_EVENTS = 500;              // 1部屋に残すイベント数
 const PC_ALIVE_MS = 6000;            // PCがこの時間内に取りに来ていれば「PC接続中」
 const MISS_LIMIT = 30;               // 1分間に番号違いがこれを超えたIPは一時的に断る
 
-const rooms = new Map();             // code -> { key, events:[{n,type,jan,ref,t}], seq, touched, pcSeen, pcInfo }
+const rooms = new Map();             // code -> { key, events:[{n,type,jan,ref,t}], seq, touched, pcSeen, pcInfo, closed }
+const CLOSED_TTL = 600e3;            // PCが終えた部屋は10分だけ「終了」として残す（スマホにカメラを止めさせるため）
 const misses = new Map();            // ip -> { n, since }
 
 function checkDigit(body) {
@@ -28,7 +29,7 @@ function newCode() {
 }
 function sweep() {
   const now = Date.now();
-  for (const [c, r] of rooms) if (now - r.touched > ROOM_TTL) rooms.delete(c);
+  for (const [c, r] of rooms) if (now - r.touched > (r.closed ? CLOSED_TTL : ROOM_TTL)) rooms.delete(c);
   for (const [ip, m] of misses) if (now - m.since > 60e3) misses.delete(ip);
 }
 setInterval(sweep, 60e3).unref();
@@ -75,15 +76,23 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, { code, key });
     }
 
-    const m = path.match(/^\/rooms\/(\d{6})(\/events)?$/);
+    const m = path.match(/^\/rooms\/(\d{6})(\/events|\/close)?$/);
     if (!m) return send(res, 404, { error: "not found" });
     if (blocked(ip)) return send(res, 429, { error: "too many" });
     const room = rooms.get(m[1]);
     if (!room) { miss(ip); return send(res, 404, { error: "no room" }); }
+
+    // PC：連携を終える（key 必須）→ スマホは「終了」を見てカメラを止める
+    if (req.method === "POST" && m[2] === "/close") {
+      if (url.searchParams.get("key") !== room.key) { miss(ip); return send(res, 403, { error: "bad key" }); }
+      room.closed = true; room.events = []; room.touched = Date.now();
+      return send(res, 200, { ok: true });
+    }
+    if (room.closed) return send(res, 410, { error: "closed", closed: true });
     room.touched = Date.now();
 
     // PC：届いたJANを取りに来る（key 必須）。今どのセットに入れているかも伝える
-    if (req.method === "GET" && m[2]) {
+    if (req.method === "GET" && m[2] === "/events") {
       if (url.searchParams.get("key") !== room.key) { miss(ip); return send(res, 403, { error: "bad key" }); }
       const after = +url.searchParams.get("after") || 0;
       room.pcSeen = Date.now();
@@ -97,7 +106,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     // スマホ：JANを送る {jan} ／ 取り消す {undo: n}
-    if (req.method === "POST" && m[2]) {
+    if (req.method === "POST" && m[2] === "/events") {
       const b = await readBody(req);
       let ev;
       if (b.undo != null) {

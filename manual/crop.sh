@@ -11,6 +11,9 @@ crop print 640   64    1250  1280  print
 crop link  1790  1336  514   720   link
 sips -s format jpeg -s formatOptions 82 phone_ok.png --out ../img/phone_ok.jpg >/dev/null
 sips -s format jpeg -s formatOptions 82 phone_ng.png --out ../img/phone_ng.jpg >/dev/null
+crop solo_edit 0 560 1000 780 solo_edit
+crop solo_cam 0 0 1688 780 solo_cam
+crop solo_pv 0 0 1688 780 solo_pv
 sips -s format jpeg -s formatOptions 88 card.png --out ../img/card.jpg >/dev/null
 sips -Z 1700 -s formatOptions 75 ../img/main.jpg >/dev/null
 ls -la ../img

@@ -68,17 +68,23 @@
 
   <!-- 番号を入れる -->
   <section class="card" id="joinCard">
-    <h2>① PCに出ている6桁の番号を入れる</h2>
+    <h2>PCに送る：PCに出ている6桁の番号を入れる</h2>
     <input id="code" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="off">
     <div class="row" style="margin-top:10px"><button class="primary" id="joinBtn">つなぐ</button></div>
     <p class="hint">PCの「レジ指示カード」で、編集欄の「スマホで読み取る」を押すと番号が出ます。</p>
     <p class="hint" id="joinMsg" style="color:var(--red)"></p>
   </section>
 
+  <section class="card" id="soloCard">
+    <h2>PCを使わず、このスマホだけで作る</h2>
+    <p class="hint" style="margin-top:0">スマホのカメラでJANを読んでカードを作り、PDFで保存します（Macは使いません）。</p>
+    <div class="row" style="margin-top:8px"><button onclick="location.href='jan-card-print.html'">このスマホでカードを作る</button></div>
+  </section>
+
   <!-- つながっている -->
   <section class="card" id="linkCard" hidden>
     <div class="status">
-      <span class="dot" id="macDot"></span><span id="macTxt">Mac：確認中…</span>
+      <span class="dot" id="macDot"></span><span id="macTxt">中継サーバー：確認中…</span>
       <span class="dot" id="pcDot"></span><span id="pcTxt">PC：確認中…</span>
     </div>
     <div class="row" style="margin-top:10px;align-items:center">
@@ -114,6 +120,7 @@
 const RELAY = "https://hiroshinomac-mini.tail387218.ts.net/jan";
 const COOLDOWN_MS = 1500;          // 同じJANは、いったん枠から外れてこの時間たってから再び数える（売場スキャンと同じ）
 const HEALTH_MS = 3000;
+const CLOSED_MSG = "PCでスマホ連携が終わったので、カメラを止めました。また使うときは、PCに出る新しい番号を入れてください。";
 const $ = id => document.getElementById(id);
 
 let code = "", macOk = null, sent = [];     // sent: [{n, jan, undone}]
@@ -156,9 +163,13 @@ function setMac(ok) {
   macOk = ok;
   document.body.classList.toggle("ng", !ok);
   $("macDot").className = "dot " + (ok ? "ok" : "ng");
-  $("macTxt").textContent = ok ? "Mac：接続中（転送できます）" : "Mac：転送不可（つながりません）";
+  $("macTxt").textContent = ok ? "中継サーバー：接続中（転送できます）" : "中継サーバー：転送不可（つながりません）";
 }
+let lastSet = "";
 function setPc(st) {
+  const set = st?.pc ? st.pcInfo?.set || "" : "";
+  if (set && lastSet && set !== lastSet) toast(`PCが ${set} に切り替わりました`, "ok");
+  if (set) lastSet = set;
   if (!st || !macOk) { $("pcDot").className = "dot"; $("pcTxt").textContent = "PC：—"; return; }
   if (st.pc) { $("pcDot").className = "dot ok"; $("pcTxt").textContent = `PC：${st.pcInfo?.set || "編集中のセット"} に追加中（いま${st.pcInfo?.count ?? 0}個）`; }
   else { $("pcDot").className = "dot wait"; $("pcTxt").textContent = "PC：待っていません（PCの画面を確認）"; }
@@ -167,6 +178,7 @@ async function check() {
   try {
     if (!code) { const r = await api("/health"); setMac(r.status === 200); return; }
     const r = await api("/rooms/" + code);
+    if (r.status === 410) { setMac(true); leave(CLOSED_MSG); return; }
     if (r.status === 404) { setMac(true); leave("この番号は使えなくなりました。PCで「スマホで読み取る」を押し直して、新しい番号を入れてください。"); return; }
     setMac(r.status === 200); setPc(r.status === 200 ? r : null);
   } catch { setMac(false); setPc(null); }
@@ -181,16 +193,16 @@ async function join(c) {
   try {
     const r = await api("/rooms/" + c);
     setMac(true);
-    if (r.status !== 200) { $("joinMsg").textContent = "番号が違うか、PCで連携が終わっています。PCの番号を確かめてください。"; return; }
+    if (r.status !== 200) { $("joinMsg").textContent = "番号が違うか、PCで連携が終わっています。PCの番号を確かめてください。"; localStorage.removeItem("jan_relay_code"); return; }
     code = c; localStorage.setItem("jan_relay_code", c);
     $("codeShow").textContent = c.slice(0, 3) + " " + c.slice(3);
-    $("joinCard").hidden = true; $("linkCard").hidden = $("camCard").hidden = $("listCard").hidden = false;
+    $("joinCard").hidden = $("soloCard").hidden = true; $("linkCard").hidden = $("camCard").hidden = $("listCard").hidden = false;
     setPc(r);
   } catch { setMac(false); $("joinMsg").textContent = "転送不可：Macにつながりません。"; }
 }
 function leave(msg) {
-  code = ""; localStorage.removeItem("jan_relay_code"); stopCamera();
-  $("joinCard").hidden = false; $("linkCard").hidden = $("camCard").hidden = $("listCard").hidden = true;
+  code = ""; lastSet = ""; localStorage.removeItem("jan_relay_code"); stopCamera();
+  $("joinCard").hidden = $("soloCard").hidden = false; $("linkCard").hidden = $("camCard").hidden = $("listCard").hidden = true;
   $("code").value = ""; $("joinMsg").textContent = msg || "";
 }
 $("joinBtn").onclick = () => join(toHalf($("code").value.trim()));
@@ -203,6 +215,7 @@ async function sendJan(jan) {
   if (!macOk) { beep(false); toast("転送不可：Macにつながりません", "warn"); return false; }
   try {
     const r = await api(`/rooms/${code}/events`, { method: "POST", body: JSON.stringify({ jan }) });
+    if (r.status === 410) { leave(CLOSED_MSG); return false; }
     if (r.status === 404) { leave("この番号は使えなくなりました。PCで新しい番号を出してください。"); return false; }
     if (r.status !== 200) { beep(false); toast("送れませんでした", "warn"); return false; }
     sent.unshift({ n: r.n, jan, undone: false }); drawList(); setPc(r);
