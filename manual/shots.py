@@ -7,6 +7,7 @@ tmp = tempfile.mkdtemp()
 SHOTS = {   # 名前: (画面の操作, 幅, 高さ)
     "main":  ("sets = sampleSets(); cur = 1; save(); refresh(true); window.scrollTo(0, 0);", 1280, 900),
     "print": ("sets = sampleSets(); save(); refresh(true); openPrint();", 1280, 900),
+    "steps": ("sets = sampleSets(); sets.push(blank()); sets[7].price = '500'; cur = 7; save(); refresh(true); setTimeout(() => goStep(2), 100);", 1280, 1500),
     "pdfpv": ("sets = sampleSets(); save(); refresh(true); openPrint(); doPrint();", 1280, 900),
     "error": ("sets = sampleSets(); sets[1].jans += '\\n4901234500098'; sets[1].yori = ''; cur = 1; save(); refresh(true);", 1280, 900),
 }

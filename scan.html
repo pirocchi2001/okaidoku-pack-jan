@@ -8,7 +8,8 @@
 <style>
   :root { --navy: #173a5c; --ink: #14212e; --sub: #5a6b7b; --line: #d3dde7; --bg: #eaf0f6; --field: #f4f7fa; --red: #d50000; --sel: #f2c230; --ok: #2e7d32; }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: "Noto Sans JP", "Hiragino Sans", sans-serif; font-size: 16px; color: var(--ink); background: var(--bg); -webkit-text-size-adjust: 100%; }
+  body { margin: 0; font-family: "Noto Sans JP", "Hiragino Sans", sans-serif; font-size: 16px; color: var(--ink); background: var(--bg); -webkit-text-size-adjust: 100%;
+    word-break: auto-phrase; line-break: strict; text-wrap: pretty; }   /* 日本語を文節で折り返す */
   header { position: relative; background: #fff; padding: 10px 16px 14px; box-shadow: 0 2px 12px rgba(20,33,46,.1); }
   header::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px;
     background: linear-gradient(90deg, #dc4c54 0 20%, #f4d44c 20% 40%, #54b4bc 40% 60%, #6cac4c 60% 80%, #4cacdc 80% 100%); }
