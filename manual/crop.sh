@@ -8,6 +8,7 @@ crop main  0     0     1800  2560  main
 crop main  1790  166   1440  720   editor
 crop error 1790  860   640   720   error
 crop print 640   64    1250  1280  print
+crop pdfpv  520   62    1738  1520  pdfpv
 crop link  1790  1336  514   720   link
 sips -s format jpeg -s formatOptions 82 phone_ok.png --out ../img/phone_ok.jpg >/dev/null
 sips -s format jpeg -s formatOptions 82 phone_ng.png --out ../img/phone_ng.jpg >/dev/null

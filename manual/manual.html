@@ -112,7 +112,7 @@
   <div class="flow">
     <div class="st"><span class="n">ステップ1</span><b>袋の中身を<br>入力する</b><small>金額と商品のJAN<br>（▶ 3ページ）</small></div>
     <div class="ar">▶</div>
-    <div class="st"><span class="n">ステップ2</span><b>A4の紙に<br>印刷する</b><small>「印刷」ボタンから<br>（▶ 6ページ）</small></div>
+    <div class="st"><span class="n">ステップ2</span><b>PDFにして<br>印刷する</b><small>「PDF出力」ボタンから<br>（▶ 6ページ）</small></div>
     <div class="ar">▶</div>
     <div class="st"><span class="n">ステップ3</span><b>切って<br>袋に付ける</b><small>点線で切り分ける<br>（▶ 7ページ）</small></div>
   </div>
@@ -123,7 +123,7 @@
     <li>袋の中身を入力する …… 3</li>
     <li>スマホのカメラで読み取る（PCへ送る） …… 4</li>
     <li>スマホだけで作る（PDF出力） …… 5</li>
-    <li>印刷する …… 6</li>
+    <li>PDFを作って印刷する …… 6</li>
     <li>カードの見かた・レジの打ち方 …… 7</li>
     <li>便利な設定 …… 8</li>
     <li>困ったとき（Q&amp;A） …… 8</li>
@@ -155,8 +155,8 @@
   </div>
   <table>
     <tr><th>A</th><td><span class="btn yellow">マニュアル</span> このマニュアルを開きます。<span class="btn">使い方</span> 短い説明、<span class="btn">サンプル</span> 練習用データを入れる、<span class="btn">全削除</span> 入力をすべて消す（2回押す）</td></tr>
-    <tr><th>B</th><td><span class="btn navy">印刷</span> 入力が終わったら押します（▶ 6ページ）</td></tr>
-    <tr><th>C</th><td><b>印刷される紙のようす（プレビュー）</b>。入力するとすぐ変わります。カードをクリックすると、そのカードを右側で直せます。紙が2枚以上のときは「次の用紙 ▶」で切り替えます。</td></tr>
+    <tr><th>B</th><td><span class="btn navy">PDF出力</span> 入力が終わったら押します。PDFを作って保存し、それを印刷します（▶ 6ページ）</td></tr>
+    <tr><th>C</th><td><b>PDFになる紙のようす（プレビュー）</b>。入力するとすぐ変わります。カードをクリックすると、そのカードを右側で直せます。紙が2枚以上のときは「次の用紙 ▶」で切り替えます。</td></tr>
     <tr><th>D</th><td><b>編集欄</b>。袋1つ分（1セット）の金額やJANを入力します（▶ 3ページ）</td></tr>
     <tr><th>E</th><td><b>セット一覧</b>。入力した袋の一覧です。押すとそのセットを直せます。</td></tr>
   </table>
@@ -184,7 +184,7 @@
       <ol class="steps">
         <li><span class="num">1</span><div><b>商品名</b><br>最初は「お買い得品パック」と入っています。そのままでも大丈夫です。</div></li>
         <li><span class="num">2</span><div><b>税込金額（円）</b><br>袋の売値を<b>税込み</b>で、数字だけ入れます（例：<b>500</b>）。本体価格は自動で計算されます。</div></li>
-        <li><span class="num">3</span><div><b>よりどり2点50%引き</b><br><span class="btn">対象です</span> か <span class="btn" style="background:#d50000;border-color:#d50000;color:#fff">対象外です（赤）</span> を<b>必ず</b>押します。選ばないと印刷できません。</div></li>
+        <li><span class="num">3</span><div><b>よりどり2点50%引き</b><br><span class="btn">対象です</span> か <span class="btn" style="background:#d50000;border-color:#d50000;color:#fff">対象外です（赤）</span> を<b>必ず</b>押します。選ばないとPDFに入りません。</div></li>
         <li><span class="num">4</span><div><b>必要枚数</b><br>同じ中身の袋をいくつ作るか。<span class="btn">－</span> <span class="btn">＋</span> で変えられます（1〜99枚）。</div></li>
         <li><span class="num">5</span><div><b>JANコード</b><br>袋に入れる商品のバーコードの数字（13けた）。入力欄をクリックしてから、<b>バーコードスキャナで商品を1つずつ読みます</b>。読むたびに自動で次の行に進みます（最大20個）。<br><b>スマホのカメラ</b>でも読めます（▶ 4ページ）。</div></li>
         <li><span class="num">6</span><div><b>確認</b><br>緑の文字で「3個 ／ 税込500円 ／ 1枚」のように出れば入力完了。<b>赤い文字</b>が出たら直します（▶ 8ページ）。</div></li>
@@ -269,15 +269,15 @@
   <div class="box warn"><div class="t">PDFを印刷するとき</div>PDFをPCに送るかプリンタで開き、A4用紙に<b>倍率100%（実際のサイズ）</b>で印刷してください。「ページに合わせる」で縮めると、バーコードが読めないことがあります。</div>
 </section>
 
-<!-- ===================== 6ページ目：印刷 ===================== -->
+<!-- ===================== 6ページ目：PDFを作って印刷 ===================== -->
 <section class="pg">
-  <h2><span class="no">5</span>印刷する</h2>
+  <h2><span class="no">5</span>PDFを作って印刷する</h2>
+  <p>カードは<b>いったんPDFファイルにして保存</b>し、そのPDFを印刷します。PCもスマホも同じ流れです。</p>
 
   <h3>手順1　確認画面で最後のチェック</h3>
-  <p>右上の <span class="btn navy">印刷</span> を押すと、確認画面が出ます。</p>
-  <div class="two">
+  <div class="two" style="grid-template-columns:64mm 1fr">
     <div class="fig">
-      <img src="img/print.jpg" alt="印刷の確認画面">
+      <img src="img/print.jpg" alt="PDF出力の確認画面">
       <span class="num" style="left:42%;top:17.5%">1</span>
       <span class="num" style="left:55%;top:26%">2</span>
       <span class="num" style="left:94%;top:20%">3</span>
@@ -285,40 +285,44 @@
       <span class="num" style="left:103%;top:92%">5</span>
     </div>
     <ol class="steps small">
-      <li><span class="num">1</span><div>全部まとめて「対象」または「対象外」にするボタン</div></li>
+      <li><span class="num">1</span><div>右上の <span class="btn navy">PDF出力</span> を押すと出ます。全部まとめて「対象」「対象外」にするボタン</div></li>
       <li><span class="num">2</span><div>袋ごとの <b>対象／対象外</b>。ここでも変えられます</div></li>
       <li><span class="num">3</span><div>カードの<b>枚数</b></div></li>
-      <li><span class="num">4</span><div>カードの<b>合計枚数</b>と、使う<b>A4用紙の枚数</b>。紙を用意しておきます</div></li>
-      <li><span class="num">5</span><div>よければ <span class="btn navy">印刷する</span> を押します</div></li>
+      <li><span class="num">4</span><div>カードの<b>合計枚数</b>と、使う<b>A4用紙の枚数</b></div></li>
+      <li><span class="num">5</span><div>よければ <span class="btn navy">PDFを作る</span> を押します</div></li>
     </ol>
   </div>
 
-  <h3>手順2　Chromeの印刷画面の設定（とても大事）</h3>
-  <p>Chromeの印刷画面が出たら、<b>次の3つ</b>を確かめます。違うとカードの大きさがずれて、レジでバーコードが読めないことがあります。</p>
+  <h3>手順2　中身を見て、PDFを保存する</h3>
+  <div class="two" style="grid-template-columns:46mm 1fr">
+    <div class="fig" style="margin:0"><img src="img/pdfpv.jpg" alt="PDFの確認"><span class="num" style="left:79%;top:97%">2</span><span class="num" style="left:92%;top:97%">1</span></div>
+    <ol class="steps small">
+      <li><span class="num">1</span><div><b>PDFの中身（プレビュー）</b>が出ます。よければ <span class="btn navy">PDFを保存</span> を押します。</div></li>
+      <li><span class="num">2</span><div>直したいところがあれば <span class="btn">やめる</span> を押して、編集欄で直します。</div></li>
+      <li><span class="num">3</span><div>PCでは、PDFが<b>「ダウンロード」フォルダ</b>に保存されます（名前は「レジ指示カード_日付_時刻.pdf」）。Chromeでは右上にダウンロードの印が出ます。</div></li>
+    </ol>
+  </div>
+
+  <h3>手順3　保存したPDFを印刷する（倍率がとても大事）</h3>
   <div class="two">
     <div class="pdlg">
       <div class="hd">印刷　<span class="sub" style="font-weight:400">（画面のイメージ）</span></div>
       <div class="rw"><span>送信先</span><span class="v">お店のプリンタ</span></div>
-      <div class="rw"><span>ページ</span><span class="v">すべて</span></div>
-      <div class="more">詳細設定 ▼<span class="num">1</span></div>
-      <div class="rw"><span>用紙サイズ</span><span class="v">A4</span></div>
-      <div class="rw hl"><span>余白</span><span class="v">なし</span><span class="num">2</span></div>
-      <div class="rw hl"><span>倍率</span><span class="v">デフォルト（100%）</span><span class="num">3</span></div>
-      <div class="rw hl"><span>オプション</span><span><span class="chk"></span>ヘッダーとフッター</span><span class="num">4</span></div>
+      <div class="rw hl"><span>用紙サイズ</span><span class="v">A4</span><span class="num">2</span></div>
+      <div class="rw hl"><span>倍率</span><span class="v">実際のサイズ（100%）</span><span class="num">3</span></div>
       <div class="ft"><span>キャンセル</span><span class="go">印刷</span></div>
     </div>
     <ol class="steps small">
-      <li><span class="num">1</span><div><b>「詳細設定」</b>を押して開きます。</div></li>
-      <li><span class="num">2</span><div><b>余白</b>を「<b>なし</b>」にします。</div></li>
-      <li><span class="num">3</span><div><b>倍率</b>を「<b>デフォルト</b>」または「<b>カスタム 100</b>」にします。「ページに合わせる」は使いません。</div></li>
-      <li><span class="num">4</span><div><b>ヘッダーとフッター</b>の<b>チェックを外します</b>（□ 空の状態）。</div></li>
-      <li><span class="num" style="background:var(--navy)">5</span><div>青い <b>印刷</b> ボタンを押します。</div></li>
+      <li><span class="num">1</span><div>保存したPDFを<b>ダブルクリック</b>で開き、印刷します（Macは <b>⌘＋P</b>、Windowsは <b>Ctrl＋P</b>）。</div></li>
+      <li><span class="num">2</span><div><b>用紙サイズ</b>は「<b>A4</b>」。</div></li>
+      <li><span class="num">3</span><div><b>倍率</b>は「<b>実際のサイズ</b>」または「<b>100%</b>」。「ページに合わせる」「用紙に合わせる」は<b>選びません</b>。</div></li>
+      <li><span class="num" style="background:var(--navy)">4</span><div><b>印刷</b> を押します。</div></li>
     </ol>
   </div>
-  <div class="box warn"><div class="t">はじめての日は「試し刷り」を</div>最初に1枚だけ印刷して、①カードの横幅が<b>10cm</b>あるか（定規で測る）、②レジのスキャナでバーコードが読めるか、を確かめてから残りを印刷してください。<br><span class="small">設定は次から覚えていることが多いですが、プリンタを変えたときは確かめ直します。</span></div>
+  <div class="box warn"><div class="t">はじめての日は「試し刷り」を</div>最初に1枚だけ印刷して、①カードの横幅が<b>10cm</b>あるか（定規で測る）、②レジのスキャナでバーコードが読めるか、を確かめてから残りを印刷してください。</div>
 </section>
 
-<!-- ===================== 5ページ目：カード・レジ ===================== -->
+<!-- ===================== 7ページ目：カード・レジ ===================== -->
 <section class="pg">
   <h2><span class="no">6</span>カードの見かた・レジの打ち方</h2>
 
@@ -355,13 +359,13 @@
   <p class="small sub">※ カードの黒いキー（セット・金額）は、レジのキーの名前です。お店のレジのキーの位置は、事前にレジ担当の方に確認してください。</p>
 </section>
 
-<!-- ===================== 6ページ目：設定・困ったとき ===================== -->
+<!-- ===================== 8ページ目：設定・困ったとき ===================== -->
 <section class="pg">
   <h2><span class="no">7</span>便利な設定</h2>
   <p>右側のいちばん下「<b>用紙・カードの設定</b>」を押すと開きます。ふだんは変えなくて大丈夫です。</p>
   <table>
     <tr><th>開始位置</th><td>前回の紙の<b>余ったところ</b>に印刷したいとき、使用済みの枚数を入れます。例：「2」なら、左上から2枚分を空けて3枚目の位置から印刷します。</td></tr>
-    <tr><th>枠線（画面／印刷）</th><td>カードを切るための点線。「印刷」にチェックを入れると紙にも点線が出ます。</td></tr>
+    <tr><th>枠線（画面／PDF）</th><td>カードを切るための点線。「PDF」にチェックを入れるとPDF（紙）にも点線が出ます。</td></tr>
     <tr><th>用紙を節約</th><td>高さの近いカードを横に並べ、紙の枚数を減らします（はじめからオン）。</td></tr>
     <tr><th>全カードをそろえる</th><td>すべてのカードを同じ高さにします。切りやすくなりますが、紙は増えます。</td></tr>
     <tr><th>カードの高さ</th><td>いちばん低いカードの高さ（50／55／57mm）。商品が多いカードは自動で伸びます。</td></tr>
@@ -372,7 +376,7 @@
   <div class="two w">
     <div>
       <div class="fig"><img src="img/error.jpg" alt="赤い文字のエラー"></div>
-      <p class="cap">赤い文字が出ている例（このセットは印刷されません）</p>
+      <p class="cap">赤い文字が出ている例（このセットはPDFに入りません）</p>
     </div>
     <div class="small">
       <table>
@@ -386,12 +390,12 @@
     </div>
   </div>
   <dl class="qa">
-    <dt>「印刷する」を押しても印刷画面が出ない</dt>
-    <dd>確認画面の下に「よりどりが未選択」と出ていないか見てください。対象／対象外を全部選ぶと印刷できます。</dd>
+    <dt>「PDFを作る」を押しても先に進まない</dt>
+    <dd>確認画面の下に「よりどりが未選択」と出ていないか見てください。対象／対象外を全部選ぶとPDFを作れます。</dd>
     <dt>カードが小さい・大きい、バーコードがレジで読めない</dt>
-    <dd>Chromeの印刷画面で、倍率「100%（デフォルト）」・余白「なし」になっているか確かめてください（▶ 6ページ）。</dd>
-    <dt>紙の上か下に日付やファイル名が印刷される</dt>
-    <dd>印刷画面の「ヘッダーとフッター」のチェックを外してください。</dd>
+    <dd>PDFを印刷するとき、倍率を「実際のサイズ（100%）」にしてください。「ページに合わせる」だと縮んでしまいます（▶ 6ページ）。</dd>
+    <dt>保存したPDFが見つからない</dt>
+    <dd>PCでは「ダウンロード」フォルダを見てください。名前は「レジ指示カード_日付_時刻.pdf」です。</dd>
     <dt>入力した内容が消えた</dt>
     <dd>別のパソコン・別のブラウザで開いていませんか。入力はそのパソコンのChromeにだけ残ります。Chromeの「閲覧履歴データの削除」をしたときも消えます。</dd>
     <dt>スマホやPCに「転送不可」と出る</dt>
