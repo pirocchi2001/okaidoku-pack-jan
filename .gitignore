@@ -1,0 +1,4 @@
+.DS_Store
+# マニュアル作成の途中ファイル（shots.py / crop.sh / build.py で作り直せる）
+manual/shots/
+manual/manual.pdf

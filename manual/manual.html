@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>レジ指示カード マニュアル</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  /* A4 縦・印刷して読む前提。build.py が headless Chrome で PDF にする */
+  @page { size: A4 portrait; margin: 11mm 14mm 10mm; }
+  :root { --navy: #173a5c; --ink: #14212e; --sub: #5a6b7b; --line: #d3dde7; --bg: #eaf0f6; --field: #f4f7fa; --red: #d50000; --sel: #f2c230; }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font-family: "Noto Sans JP", "Hiragino Sans", sans-serif; font-size: 10.5pt; line-height: 1.6; color: var(--ink); }
+  .pg { break-after: page; }
+  .pg:last-child { break-after: auto; }
+  h1 { font-size: 26pt; line-height: 1.3; margin: 0; font-weight: 900; }
+  h2 { font-size: 17pt; margin: 0 0 3mm; padding: 2mm 4mm; background: var(--navy); color: #fff; border-radius: 2mm; }
+  h2 .no { display: inline-block; background: #fff; color: var(--navy); border-radius: 50%; width: 9mm; height: 9mm; line-height: 9mm; text-align: center; margin-right: 3mm; font-weight: 900; }
+  h3 { font-size: 12pt; margin: 3.5mm 0 1.5mm; padding-left: 3mm; border-left: 1.5mm solid var(--sel); }
+  p { margin: 0 0 1.8mm; }
+  b, strong { font-weight: 700; }
+  .lead { font-size: 12.5pt; }
+  .stripe { height: 2mm; background: linear-gradient(90deg, #dc4c54 0 20%, #f4d44c 20% 40%, #54b4bc 40% 60%, #6cac4c 60% 80%, #4cacdc 80% 100%); margin: 4mm 0 6mm; }
+  .sub { color: var(--sub); }
+  .small { font-size: 10pt; }
+
+  /* ボタン・キーの見た目（画面の表示に合わせる） */
+  .btn { display: inline-block; border: 0.3mm solid #9aa8b6; border-radius: 1.5mm; padding: 0 2.2mm; background: #fff; font-weight: 700; font-size: 10.5pt; line-height: 1.6; white-space: nowrap; }
+  .btn.navy { background: var(--navy); border-color: var(--navy); color: #fff; }
+  .btn.yellow { background: #fff8e1; border-color: var(--sel); }
+  .key { display: inline-block; background: #000; color: #fff; border-radius: 1mm; padding: 0 2mm; font-weight: 700; white-space: nowrap; }
+  .num { display: inline-block; width: 6.5mm; height: 6.5mm; line-height: 6.5mm; border-radius: 50%; background: var(--red); color: #fff; text-align: center; font-weight: 900; font-size: 10.5pt; flex: none; }
+
+  /* 写真＋番号 */
+  .fig { position: relative; margin: 2mm 0 2.5mm; break-inside: avoid; }
+  .fig img { display: block; width: 100%; border: 0.3mm solid var(--line); border-radius: 2mm; }
+  .fig .num { position: absolute; transform: translate(-50%, -50%); width: 8mm; height: 8mm; line-height: 8mm; font-size: 12pt; box-shadow: 0 0 0 0.8mm #fff; }
+  .cap { font-size: 9.5pt; color: var(--sub); text-align: center; margin-top: -1mm; }
+
+  /* 手順の一覧 */
+  ol.steps { list-style: none; padding: 0; margin: 0; }
+  ol.steps > li { display: flex; gap: 3mm; align-items: flex-start; padding: 1.3mm 0; border-bottom: 0.2mm dashed var(--line); }
+  ol.steps > li:last-child { border-bottom: 0; }
+  ol.steps > li .num { margin-top: 0.8mm; }
+  ol.steps > li > div { flex: 1; }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; align-items: start; }
+  .two.w { grid-template-columns: 70mm 1fr; }
+
+  .box { break-inside: avoid; border: 0.4mm solid var(--line); border-radius: 2mm; padding: 2mm 4mm; margin: 2.5mm 0; background: var(--field); }
+  .box.warn { border-color: #e6a100; background: #fff8e1; }
+  .box.ng { border-color: var(--red); background: #fff1f1; }
+  .box .t { font-weight: 900; margin-bottom: 1mm; }
+
+  /* 全体の流れ */
+  .flow { display: flex; align-items: stretch; gap: 0; margin: 4mm 0; }
+  .flow .st { flex: 1; border: 0.5mm solid var(--navy); border-radius: 2mm; padding: 3mm; text-align: center; background: #fff; }
+  .flow .st .n { display: block; font-size: 9.5pt; color: var(--sub); }
+  .flow .st b { display: block; font-size: 13pt; line-height: 1.4; }
+  .flow .st small { display: block; font-size: 9.5pt; color: var(--sub); line-height: 1.5; margin-top: 1mm; }
+  .flow .ar { align-self: center; font-size: 16pt; color: var(--navy); padding: 0 1.5mm; }
+
+  /* レジの打ち方 */
+  .reg { display: flex; align-items: center; flex-wrap: wrap; gap: 2mm; font-size: 14pt; font-weight: 700; margin: 3mm 0; padding: 3mm 4mm; border: 0.5mm solid #000; border-radius: 2mm; }
+  .reg .key { font-size: 13pt; padding: 0.5mm 3mm; }
+  .reg .scan { border: 0.4mm solid #000; border-radius: 1mm; padding: 0 2mm; font-size: 13pt; }
+  .reg .ar { font-size: 11pt; }
+
+  /* Chrome の印刷画面（イメージ図） */
+  .pdlg { border: 0.4mm solid #9aa8b6; border-radius: 2mm; overflow: hidden; font-size: 10pt; background: #fff; }
+  .pdlg .hd { background: #f1f3f4; padding: 2mm 4mm; font-weight: 700; border-bottom: 0.3mm solid #dadce0; }
+  .pdlg .rw { display: grid; grid-template-columns: 32mm 1fr; align-items: center; padding: 1.6mm 4mm; border-bottom: 0.2mm solid #eee; position: relative; }
+  .pdlg .rw .v { border: 0.3mm solid #dadce0; border-radius: 1mm; padding: 0.3mm 2mm; background: #fff; }
+  .pdlg .rw.hl { background: #fff8e1; }
+  .pdlg .rw.hl .v { border-color: #e6a100; font-weight: 700; }
+  .pdlg .rw .num { position: absolute; right: 3mm; }
+  .pdlg .more { padding: 1.6mm 4mm; color: #1a73e8; font-weight: 700; border-bottom: 0.2mm solid #eee; position: relative; }
+  .pdlg .more .num { position: absolute; right: 3mm; top: 1.2mm; }
+  .pdlg .ft { display: flex; justify-content: flex-end; gap: 2mm; padding: 2mm 4mm; background: #f1f3f4; }
+  .pdlg .ft span { border-radius: 1mm; padding: 0.5mm 4mm; font-weight: 700; border: 0.3mm solid #dadce0; background: #fff; }
+  .pdlg .ft span.go { background: #1a73e8; color: #fff; border-color: #1a73e8; }
+  .chk { display: inline-block; width: 3.6mm; height: 3.6mm; border: 0.4mm solid #5f6368; border-radius: 0.6mm; vertical-align: -0.5mm; margin-right: 1.5mm; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 10pt; margin: 2mm 0; }
+  th, td { border: 0.25mm solid var(--line); padding: 1.1mm 2.5mm; text-align: left; vertical-align: top; line-height: 1.55; }
+  th { background: var(--field); white-space: nowrap; }
+  .qa dt { font-weight: 900; margin-top: 2mm; }
+  .qa dt::before { content: "Q. "; color: var(--red); }
+  .qa dd { margin: 0.5mm 0 0 6mm; }
+  .qa dd::before { content: "A. "; font-weight: 900; color: var(--navy); margin-left: -6mm; }
+  .toc { columns: 2; font-size: 11pt; margin: 2mm 0; padding-left: 5mm; }
+</style>
+</head>
+<body>
+
+<!-- ===================== 1ページ目：表紙 ===================== -->
+<section class="pg">
+  <p class="sub" style="margin:0">処分品セット レジ指示カード（A4）</p>
+  <h1>使い方マニュアル</h1>
+  <p class="lead" style="margin-top:2mm">パソコンに慣れていない方でも、この順番どおりに進めればカードを印刷できます。</p>
+  <div class="stripe"></div>
+
+  <h3>このツールでできること</h3>
+  <p>処分品を袋に詰めて売るときに、<b>レジ係へ渡す「指示カード」</b>を作って印刷します。<b>袋1つにカード1枚</b>です。レジ係はカードに書いてある順番どおりにレジを打つだけで、袋の会計ができます。</p>
+
+  <div class="fig" style="width:115mm;margin:3mm auto 1mm">
+    <img src="img/card.jpg" alt="印刷されるカード">
+  </div>
+  <p class="cap">印刷されるカードの例（実際の大きさは 横10cm）</p>
+
+  <h3>作業は3ステップです</h3>
+  <div class="flow">
+    <div class="st"><span class="n">ステップ1</span><b>袋の中身を<br>入力する</b><small>金額と商品のJAN<br>（▶ 3ページ）</small></div>
+    <div class="ar">▶</div>
+    <div class="st"><span class="n">ステップ2</span><b>A4の紙に<br>印刷する</b><small>「印刷」ボタンから<br>（▶ 4ページ）</small></div>
+    <div class="ar">▶</div>
+    <div class="st"><span class="n">ステップ3</span><b>切って<br>袋に付ける</b><small>点線で切り分ける<br>（▶ 5ページ）</small></div>
+  </div>
+
+  <h3>もくじ</h3>
+  <ol class="toc">
+    <li>ツールを開く・画面の見かた …… 2</li>
+    <li>袋の中身を入力する …… 3</li>
+    <li>印刷する …… 4</li>
+    <li>カードの見かた・レジの打ち方 …… 5</li>
+    <li>便利な設定 …… 6</li>
+    <li>困ったとき（Q&amp;A） …… 6</li>
+  </ol>
+</section>
+
+<!-- ===================== 2ページ目：開く・画面 ===================== -->
+<section class="pg">
+  <h2><span class="no">1</span>ツールを開く・画面の見かた</h2>
+
+  <h3>ツールを開く</h3>
+  <ol class="steps">
+    <li><span class="num">1</span><div>ファイル <b>jan-card-print.html</b> を探します（デスクトップや共有フォルダなど、置いてある場所）。</div></li>
+    <li><span class="num">2</span><div>ファイルを<b>ダブルクリック</b>します。<b>Google Chrome</b>（グーグル クローム）で開けば準備完了です。</div></li>
+    <li><span class="num">3</span><div>Chrome 以外（Safari や Edge など）で開いたときは、ファイルを<b>右クリック</b> →「このアプリケーションで開く」（Windowsは「プログラムから開く」）→「Google Chrome」を選びます。</div></li>
+  </ol>
+  <div class="box"><div class="t">入力は自動で保存されます</div>保存ボタンはありません。入力した内容は、<b>そのパソコンのChrome</b>に自動で残ります。次に開いたときも続きから作業できます。<br><span class="small sub">※ 別のパソコンや別のブラウザには引き継がれません。</span></div>
+
+  <div class="box warn"><div class="t">はじめて使うとき</div>最初は練習用のサンプルが入っています。本番の入力の前に、右上の <span class="btn">全削除</span> を<b>2回</b>押して消してください（1回目は「もう一度で全削除」と表示されます）。</div>
+
+  <h3>画面の見かた</h3>
+  <div class="fig" style="width:122mm;margin:2mm auto">
+    <img src="img/main.jpg" alt="ツールの画面">
+    <span class="num" style="left:61.5%;top:3.4%">A</span>
+    <span class="num" style="left:95.6%;top:10.5%">B</span>
+    <span class="num" style="left:35%;top:52%">C</span>
+    <span class="num" style="left:69.5%;top:22%">D</span>
+    <span class="num" style="left:69.5%;top:84%">E</span>
+  </div>
+  <table>
+    <tr><th>A</th><td><span class="btn yellow">マニュアル</span> このマニュアルを開きます。<span class="btn">使い方</span> 短い説明、<span class="btn">サンプル</span> 練習用データを入れる、<span class="btn">全削除</span> 入力をすべて消す（2回押す）</td></tr>
+    <tr><th>B</th><td><span class="btn navy">印刷</span> 入力が終わったら押します（▶ 4ページ）</td></tr>
+    <tr><th>C</th><td><b>印刷される紙のようす（プレビュー）</b>。入力するとすぐ変わります。カードをクリックすると、そのカードを右側で直せます。紙が2枚以上のときは「次の用紙 ▶」で切り替えます。</td></tr>
+    <tr><th>D</th><td><b>編集欄</b>。袋1つ分（1セット）の金額やJANを入力します（▶ 3ページ）</td></tr>
+    <tr><th>E</th><td><b>セット一覧</b>。入力した袋の一覧です。押すとそのセットを直せます。</td></tr>
+  </table>
+</section>
+
+<!-- ===================== 3ページ目：入力 ===================== -->
+<section class="pg">
+  <h2><span class="no">2</span>袋の中身を入力する</h2>
+  <p>右側の編集欄に、<b>袋1つ分（1セット）</b>ずつ入力します。左上の「No.1」が、いま入力しているセットの番号です。</p>
+
+  <div class="two w">
+    <div>
+      <div class="fig" style="margin-left:3mm">
+        <img src="img/editor.jpg" alt="編集欄">
+        <span class="num" style="left:0;top:14.5%">1</span>
+        <span class="num" style="left:0;top:23%">2</span>
+        <span class="num" style="left:0;top:35.5%">3</span>
+        <span class="num" style="left:0;top:44.5%">4</span>
+        <span class="num" style="left:0;top:61%">5</span>
+        <span class="num" style="left:0;top:85%">6</span>
+        <span class="num" style="left:0;top:92%">7</span>
+      </div>
+    </div>
+    <div>
+      <ol class="steps">
+        <li><span class="num">1</span><div><b>商品名</b><br>最初は「お買い得品パック」と入っています。そのままでも大丈夫です。</div></li>
+        <li><span class="num">2</span><div><b>税込金額（円）</b><br>袋の売値を<b>税込み</b>で、数字だけ入れます（例：<b>500</b>）。本体価格は自動で計算されます。</div></li>
+        <li><span class="num">3</span><div><b>よりどり2点50%引き</b><br><span class="btn">対象です</span> か <span class="btn" style="background:#d50000;border-color:#d50000;color:#fff">対象外です（赤）</span> を<b>必ず</b>押します。選ばないと印刷できません。</div></li>
+        <li><span class="num">4</span><div><b>必要枚数</b><br>同じ中身の袋をいくつ作るか。<span class="btn">－</span> <span class="btn">＋</span> で変えられます（1〜99枚）。</div></li>
+        <li><span class="num">5</span><div><b>JANコード</b><br>袋に入れる商品のバーコードの数字（13けた）。入力欄をクリックしてから、<b>バーコードスキャナで商品を1つずつ読みます</b>。読むたびに自動で次の行に進みます（最大20個）。</div></li>
+        <li><span class="num">6</span><div><b>確認</b><br>緑の文字で「3個 ／ 税込500円 ／ 1枚」のように出れば入力完了。<b>赤い文字</b>が出たら直します（▶ 6ページ）。</div></li>
+        <li><span class="num">7</span><div><b>次の袋へ</b><br><span class="btn">＋ 次のセットを追加</span> を押して、1〜6をくり返します。</div></li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="box"><div class="t">同じ商品が2つ入る袋は？</div>その商品を<b>2回</b>読んでください。カードには「同じ商品 1/2」「2/2」の印が付き、レジ係が読み忘れないようにします。個数も自動で数えます。</div>
+  <div class="box"><div class="t">スキャナがないときは</div>商品のバーコードの下の13けたの数字を、キーボードで入力して <b>Enter</b> キーを押します。12けたまで入れれば、最後の1けたは自動で付きます。</div>
+  <p class="small sub">直したいとき：一覧のセットを押す／プレビューのカードをクリック。<span class="btn">空にする</span> はそのセットの入力を消す、<span class="btn" style="color:#c62828">削除して詰める</span> はセットごと消して番号を詰めます。</p>
+</section>
+
+<!-- ===================== 4ページ目：印刷 ===================== -->
+<section class="pg">
+  <h2><span class="no">3</span>印刷する</h2>
+
+  <h3>手順1　確認画面で最後のチェック</h3>
+  <p>右上の <span class="btn navy">印刷</span> を押すと、確認画面が出ます。</p>
+  <div class="two">
+    <div class="fig">
+      <img src="img/print.jpg" alt="印刷の確認画面">
+      <span class="num" style="left:42%;top:17.5%">1</span>
+      <span class="num" style="left:55%;top:26%">2</span>
+      <span class="num" style="left:94%;top:20%">3</span>
+      <span class="num" style="left:44%;top:92%">4</span>
+      <span class="num" style="left:103%;top:92%">5</span>
+    </div>
+    <ol class="steps small">
+      <li><span class="num">1</span><div>全部まとめて「対象」または「対象外」にするボタン</div></li>
+      <li><span class="num">2</span><div>袋ごとの <b>対象／対象外</b>。ここでも変えられます</div></li>
+      <li><span class="num">3</span><div>カードの<b>枚数</b></div></li>
+      <li><span class="num">4</span><div>カードの<b>合計枚数</b>と、使う<b>A4用紙の枚数</b>。紙を用意しておきます</div></li>
+      <li><span class="num">5</span><div>よければ <span class="btn navy">印刷する</span> を押します</div></li>
+    </ol>
+  </div>
+
+  <h3>手順2　Chromeの印刷画面の設定（とても大事）</h3>
+  <p>Chromeの印刷画面が出たら、<b>次の3つ</b>を確かめます。違うとカードの大きさがずれて、レジでバーコードが読めないことがあります。</p>
+  <div class="two">
+    <div class="pdlg">
+      <div class="hd">印刷　<span class="sub" style="font-weight:400">（画面のイメージ）</span></div>
+      <div class="rw"><span>送信先</span><span class="v">お店のプリンタ</span></div>
+      <div class="rw"><span>ページ</span><span class="v">すべて</span></div>
+      <div class="more">詳細設定 ▼<span class="num">1</span></div>
+      <div class="rw"><span>用紙サイズ</span><span class="v">A4</span></div>
+      <div class="rw hl"><span>余白</span><span class="v">なし</span><span class="num">2</span></div>
+      <div class="rw hl"><span>倍率</span><span class="v">デフォルト（100%）</span><span class="num">3</span></div>
+      <div class="rw hl"><span>オプション</span><span><span class="chk"></span>ヘッダーとフッター</span><span class="num">4</span></div>
+      <div class="ft"><span>キャンセル</span><span class="go">印刷</span></div>
+    </div>
+    <ol class="steps small">
+      <li><span class="num">1</span><div><b>「詳細設定」</b>を押して開きます。</div></li>
+      <li><span class="num">2</span><div><b>余白</b>を「<b>なし</b>」にします。</div></li>
+      <li><span class="num">3</span><div><b>倍率</b>を「<b>デフォルト</b>」または「<b>カスタム 100</b>」にします。「ページに合わせる」は使いません。</div></li>
+      <li><span class="num">4</span><div><b>ヘッダーとフッター</b>の<b>チェックを外します</b>（□ 空の状態）。</div></li>
+      <li><span class="num" style="background:var(--navy)">5</span><div>青い <b>印刷</b> ボタンを押します。</div></li>
+    </ol>
+  </div>
+  <div class="box warn"><div class="t">はじめての日は「試し刷り」を</div>最初に1枚だけ印刷して、①カードの横幅が<b>10cm</b>あるか（定規で測る）、②レジのスキャナでバーコードが読めるか、を確かめてから残りを印刷してください。<br><span class="small">設定は次から覚えていることが多いですが、プリンタを変えたときは確かめ直します。</span></div>
+</section>
+
+<!-- ===================== 5ページ目：カード・レジ ===================== -->
+<section class="pg">
+  <h2><span class="no">4</span>カードの見かた・レジの打ち方</h2>
+
+  <h3>切って袋に付ける</h3>
+  <p>A4の紙に、カードが2列で並んで印刷されます。<b>カードの外側の線（点線）で切り</b>、袋に付けます（テープで貼る・袋に入れるなど、お店のやり方で）。<br><span class="small sub">※ 点線を印刷しない設定にもできます（▶ 6ページ）。</span></p>
+
+  <h3>カードの見かた</h3>
+  <div class="fig" style="width:125mm;margin:2mm auto">
+    <img src="img/card.jpg" alt="カードの見かた">
+    <span class="num" style="left:-4%;top:12%">1</span>
+    <span class="num" style="left:-4%;top:22.5%">2</span>
+    <span class="num" style="left:57%;top:19%">3</span>
+    <span class="num" style="left:11%;top:58%">4</span>
+    <span class="num" style="left:-4%;top:90%">5</span>
+  </div>
+  <table>
+    <tr><th>1</th><td>商品名</td></tr>
+    <tr><th>2</th><td>よりどり2点50%引きの <b>対象</b>（白地に黒枠）／<b style="color:#d50000">対象外</b>（赤地に白文字）</td></tr>
+    <tr><th>3</th><td>袋の<b>合計金額（税込）</b>。下の小さい字は本体価格（税10%）</td></tr>
+    <tr><th>4</th><td>袋の中の商品のバーコード（2列）。同じ商品が入っているときは「同じ商品 1/2」の印付き</td></tr>
+    <tr><th>5</th><td><b>レジ操作</b>：レジ係がこの順番で打ちます（下の説明）</td></tr>
+  </table>
+
+  <h3>レジ係の打ち方</h3>
+  <p>カードのいちばん下の「レジ操作」のとおりに、左から順番に打ちます。</p>
+  <div class="reg">
+    <span>3</span><span class="ar">▶</span><span class="key">セット</span><span class="ar">▶</span><span>500円</span><span class="ar">▶</span><span class="key">金額</span><span class="ar">▶</span><span class="scan">全部スキャン</span>
+  </div>
+  <ol class="steps">
+    <li><span class="num">1</span><div>袋の<b>個数</b>（例：3）を打ち、レジの <span class="key">セット</span> キーを押す</div></li>
+    <li><span class="num">2</span><div>袋の<b>税込金額</b>（例：500）を打ち、レジの <span class="key">金額</span> キーを押す</div></li>
+    <li><span class="num">3</span><div>カードのバーコードを<b>全部</b>スキャンする（「同じ商品」の印があるものは、その数だけ読む）</div></li>
+  </ol>
+  <p class="small sub">※ カードの黒いキー（セット・金額）は、レジのキーの名前です。お店のレジのキーの位置は、事前にレジ担当の方に確認してください。</p>
+</section>
+
+<!-- ===================== 6ページ目：設定・困ったとき ===================== -->
+<section class="pg">
+  <h2><span class="no">5</span>便利な設定</h2>
+  <p>右側のいちばん下「<b>用紙・カードの設定</b>」を押すと開きます。ふだんは変えなくて大丈夫です。</p>
+  <table>
+    <tr><th>開始位置</th><td>前回の紙の<b>余ったところ</b>に印刷したいとき、使用済みの枚数を入れます。例：「2」なら、左上から2枚分を空けて3枚目の位置から印刷します。</td></tr>
+    <tr><th>枠線（画面／印刷）</th><td>カードを切るための点線。「印刷」にチェックを入れると紙にも点線が出ます。</td></tr>
+    <tr><th>用紙を節約</th><td>高さの近いカードを横に並べ、紙の枚数を減らします（はじめからオン）。</td></tr>
+    <tr><th>全カードをそろえる</th><td>すべてのカードを同じ高さにします。切りやすくなりますが、紙は増えます。</td></tr>
+    <tr><th>カードの高さ</th><td>いちばん低いカードの高さ（50／55／57mm）。商品が多いカードは自動で伸びます。</td></tr>
+    <tr><th>バーの高さ・太さ</th><td>バーコードの大きさ。<b>レジで読みにくいときだけ</b>変えます（標準：6mm・100%）。</td></tr>
+  </table>
+
+  <h2 style="margin-top:6mm"><span class="no">6</span>困ったとき（Q&amp;A）</h2>
+  <div class="two w">
+    <div>
+      <div class="fig"><img src="img/error.jpg" alt="赤い文字のエラー"></div>
+      <p class="cap">赤い文字が出ている例（このセットは印刷されません）</p>
+    </div>
+    <div class="small">
+      <table>
+        <tr><th>赤い文字</th><th>直し方</th></tr>
+        <tr><td>チェックデジット違い</td><td>数字の打ちまちがいか読みまちがい。その行を消して読み直す</td></tr>
+        <tr><td>8桁（短縮JAN）は使えません</td><td>8けたのバーコードは使えません。13けたのJANを入れる</td></tr>
+        <tr><td>◯桁です（JANは13桁）</td><td>けた数が違います。数字を確かめる</td></tr>
+        <tr><td>金額が未入力です</td><td>税込金額を入れる</td></tr>
+        <tr><td>◯個は入りません</td><td>1袋は20個まで。袋を分ける</td></tr>
+      </table>
+    </div>
+  </div>
+  <dl class="qa">
+    <dt>「印刷する」を押しても印刷画面が出ない</dt>
+    <dd>確認画面の下に「よりどりが未選択」と出ていないか見てください。対象／対象外を全部選ぶと印刷できます。</dd>
+    <dt>カードが小さい・大きい、バーコードがレジで読めない</dt>
+    <dd>Chromeの印刷画面で、倍率「100%（デフォルト）」・余白「なし」になっているか確かめてください（▶ 4ページ）。</dd>
+    <dt>紙の上か下に日付やファイル名が印刷される</dt>
+    <dd>印刷画面の「ヘッダーとフッター」のチェックを外してください。</dd>
+    <dt>入力した内容が消えた</dt>
+    <dd>別のパソコン・別のブラウザで開いていませんか。入力はそのパソコンのChromeにだけ残ります。Chromeの「閲覧履歴データの削除」をしたときも消えます。</dd>
+    <dt>まちがえて全部消してしまった</dt>
+    <dd>元に戻すことはできません。もう一度入力してください。</dd>
+  </dl>
+</section>
+
+</body>
+</html>
