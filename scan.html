@@ -43,6 +43,10 @@
   .cam .msg { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; color: #fff; font-size: 14px; text-shadow: 0 1px 3px #000; }
   .cam .start { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
   .cam .torch { position: absolute; right: 8px; top: 8px; padding: 6px 10px; font-size: 14px; display: none; }
+  .cam.hit .guide { border-color: #00e676; }
+  .take { display: block; width: 100%; margin-top: 10px; padding: 14px 10px; font-size: 20px; line-height: 1.3; }
+  .take small { display: block; font-size: 13px; font-weight: 400; opacity: .85; }
+  .take .jan { font-family: ui-monospace, Menlo, monospace; letter-spacing: 1px; }
   body.ng .cam::after { content: "転送不可"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(213,0,0,.75); color: #fff; font-size: 30px; font-weight: 700; }
 
   .toast { position: fixed; left: 50%; top: 14px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 15px; font-weight: 700; opacity: 0; transition: opacity .2s; z-index: 10; pointer-events: none; white-space: nowrap; }
@@ -103,7 +107,8 @@
       <div class="start" id="startBox"><button class="primary" id="startBtn">カメラを起動</button></div>
       <button class="torch" id="torchBtn">ライト</button>
     </div>
-    <p class="hint">読めると「ピッ」と鳴り、PCの編集中のセットにJANが入ります。同じ商品を2つ入れるときは、一度カメラから外してからもう一度読みます。</p>
+    <button class="primary take" id="takeBtn" disabled>バーコードを枠に入れてください</button>
+    <p class="hint">枠に入ったバーコードの数字がボタンに出ます。合っていれば「取り込む」を押すと「ピッ」と鳴り、PCの編集中のセットにJANが入ります。同じ商品を2つ入れるときは、もう一度ボタンを押します。</p>
     <details style="margin-top:8px"><summary style="font-size:14px">数字を手で入力する</summary>
       <div class="row" style="margin-top:8px"><input id="manual" inputmode="numeric" maxlength="13" placeholder="13けた" style="font-size:18px;letter-spacing:2px"><button id="manualBtn" style="flex:none">送る</button></div>
     </details>
@@ -119,7 +124,8 @@
 
 <script>
 const RELAY = "https://hiroshinomac-mini.tail387218.ts.net/jan";
-const COOLDOWN_MS = 1500;          // 同じJANは、いったん枠から外れてこの時間たってから再び数える（売場スキャンと同じ）
+const HOLD_MS = 2500;              // 枠から外れても、この時間はボタンに候補を残す（押すときに手が動いても大丈夫なように）
+const AFTER_TAKE_MS = 1200;        // 取り込んだ直後は同じJANを候補に出さない（ボタンの押しすぎで2回入らないように）
 const HEALTH_MS = 3000;
 const CLOSED_MSG = "PCでスマホ連携が終わったので、カメラを止めました。また使うときは、PCに出る新しい番号を入れてください。";
 const $ = id => document.getElementById(id);
@@ -249,7 +255,7 @@ $("manualBtn").onclick = async () => {
 // ===== カメラ（売場スキャンと同じ：BarcodeDetector、なければ html5-qrcode） =====
 const video = $("video");
 let stream = null, track = null, looping = false, detector = null, h5 = null;
-const lastSeen = new Map();
+let cand = "", candAt = 0, taken = "", takenAt = 0;   // cand：いまボタンに出ている候補
 if ("BarcodeDetector" in window) { try { detector = new BarcodeDetector({ formats: ["ean_13"] }); } catch {} }
 
 function loadH5() {
@@ -279,6 +285,7 @@ async function startCamera() {
 function stopCamera() {
   looping = false; stream?.getTracks().forEach(t => t.stop()); stream = track = null;
   $("startBox").style.display = ""; $("torchBtn").style.display = "none";
+  setCand("");
 }
 $("startBtn").onclick = () => {   // iPhone はボタンを押したときに音を使えるようにしておく
   try { actx ??= new (window.AudioContext || window.webkitAudioContext)(); actx.resume?.(); } catch {}
@@ -297,8 +304,8 @@ function guideCanvas() {   // 黄色い枠のあたり（少し広め）だけ�
   work.getContext("2d").drawImage(video, x, y, gw / s, gh / s, 0, 0, work.width, work.height);
   return work;
 }
-async function detect() {
-  if (detector) return (await detector.detect(video)).map(r => r.rawValue);
+async function detect() {   // 黄色い枠のあたりだけを読む（まわりの商品のバーコードを拾わないように）
+  if (detector) return (await detector.detect(guideCanvas())).map(r => r.rawValue);
   h5 ??= new Html5Qrcode("h5-hidden", { verbose: false, formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13] });
   const blob = await new Promise(r => guideCanvas().toBlob(r, "image/jpeg", 0.9));
   try { return [await h5.scanFile(new File([blob], "f.jpg", { type: "image/jpeg" }), false)]; } catch { return []; }
@@ -309,18 +316,26 @@ async function loop() {
       let found = [];
       try { found = await detect(); } catch {}
       const now = Date.now();
-      for (const raw of found) {
-        const jan = String(raw).replace(/\D/g, "");
-        if (!validJan(jan)) continue;
-        const prev = lastSeen.get(jan) ?? 0; lastSeen.set(jan, now);
-        if (now - prev < COOLDOWN_MS) continue;          // 映り続けている間は1回だけ
-        if (!macOk) { beep(false); toast("転送不可：Macにつながりません", "warn"); continue; }
-        await sendJan(jan);
-      }
+      const jan = found.map(r => String(r).replace(/\D/g, "")).find(j => validJan(j) && !(j === taken && now - takenAt < AFTER_TAKE_MS));
+      if (jan) { if (jan !== cand) navigator.vibrate?.(20); setCand(jan); candAt = now; }
+      else if (cand && now - candAt > HOLD_MS) setCand("");
     }
     await new Promise(r => setTimeout(r, detector ? 120 : 250));
   }
 }
+function setCand(jan) {   // 候補をボタンに出す（自動では送らない）
+  cand = jan;
+  const b = $("takeBtn");
+  b.disabled = !jan;
+  b.innerHTML = jan ? `取り込む<small><span class="jan">${jan}</span></small>` : "バーコードを枠に入れてください";
+  document.querySelector(".cam").classList.toggle("hit", !!jan);
+}
+$("takeBtn").onclick = async () => {
+  const jan = cand;
+  if (!jan) return;
+  taken = jan; takenAt = Date.now(); setCand("");
+  await sendJan(jan);
+};
 
 // ===== はじめに =====
 check();
